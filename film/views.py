@@ -5,11 +5,16 @@ from .models import Film
 from .serializers import FilmSerializer
 from django.http import Http404
 from django.http import HttpResponse
+from .utils import Redis
 
 class SelectFilmViews(APIView):
     def get(self, request):
+        cached_data = Redis.get('CarAPICall')
+        if cached_data:
+            return Response(cached_data)
         films = Film.objects.all()
         serializer = FilmSerializer(films, many=True)
+        Redis.set('CarAPICall', serializer.data)
         return Response(serializer.data)
 
 class CreateFilmViews(APIView):
